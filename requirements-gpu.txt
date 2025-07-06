@@ -1,0 +1,19 @@
+# GPU версия (требует NVIDIA GPU с CUDA)
+numpy>=1.24.0
+pandas>=2.0.0
+stable-baselines3>=2.0.0
+gymnasium>=0.29.0
+matplotlib>=3.7.0
+
+# PyTorch с CUDA поддержкой (установка зависит от версии CUDA)
+# Для CUDA 11.8:
+--index-url https://download.pytorch.org/whl/cu118
+torch>=2.0.0+cu118
+
+# Для CUDA 12.1 раскомментируйте следующие строки:
+# --index-url https://download.pytorch.org/whl/cu121  
+# torch>=2.0.0+cu121
+
+# Для последней версии CUDA:
+# --index-url https://download.pytorch.org/whl/cu124
+# torch>=2.0.0+cu124 
