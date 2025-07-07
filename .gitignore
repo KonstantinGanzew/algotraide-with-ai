@@ -84,3 +84,6 @@ plots/
 *.jpg
 *.jpeg
 *.pdf 
+
+*.png
+*test*
