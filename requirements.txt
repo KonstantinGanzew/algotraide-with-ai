@@ -1,12 +1,19 @@
-# CPU версия (работает везде, но медленнее)
-numpy>=1.24.0
-pandas>=2.0.0
-stable-baselines3>=2.0.0
-gymnasium>=0.29.0
-matplotlib>=3.7.0
+# Основные зависимости для торгового алгоритма с RL и LSTM
+numpy>=1.21.0
+pandas>=1.3.0
+torch>=1.12.0
+stable-baselines3>=1.6.0
+gymnasium>=0.26.0
+matplotlib>=3.5.0
 
-# PyTorch CPU версия
-torch>=2.0.0+cpu --index-url https://download.pytorch.org/whl/cpu
+# Дополнительные зависимости для анализа
+scipy>=1.7.0
+scikit-learn>=1.0.0
+ta-lib>=0.4.0  # Технические индикаторы (опционально)
+
+# Утилиты
+tqdm>=4.62.0
+seaborn>=0.11.0  # Для улучшенной визуализации
 
 # Для установки GPU версии используйте:
 # pip install -r requirements-gpu.txt 
