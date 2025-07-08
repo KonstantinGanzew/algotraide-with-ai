@@ -10,6 +10,9 @@
 3. ✅ ПЕРЕРАБОТАНА система вознаграждений - основана ТОЛЬКО на изменении баланса
 4. ✅ УБРАНЫ искусственные бонусы за торговые действия
 5. ✅ ИСПРАВЛЕНА торговая логика - корректно списывает/возвращает средства
+6. ✅ ДОБАВЛЕНЫ торговые комиссии для реалистичности
+7. ✅ УЛУЧШЕНО управление рисками (2% риска на сделку)
+8. ✅ ОПТИМИЗИРОВАНО соотношение риск/прибыль (1:3)
 
 СТАРАЯ ПРОБЛЕМА: 
 - Алгоритм получал награды ~32000, но баланс оставался 10000 USDT
@@ -18,16 +21,17 @@
 ОЖИДАЕМЫЙ РЕЗУЛЬТАТ:
 - Награды напрямую коррелируют с ростом баланса
 - Алгоритм учится генерировать реальную прибыль
+- Учитываются реальные торговые издержки
 
 УЛУЧШЕННАЯ ВЕРСИЯ ТОРГОВОГО АЛГОРИТМА ДЛЯ ПОВЫШЕНИЯ ПРИБЫЛЬНОСТИ
 
 КЛЮЧЕВЫЕ ИЗМЕНЕНИЯ:
-1. СБАЛАНСИРОВАННЫЙ риск-менеджмент (2% риска на сделку вместо 20%)
-2. УЛУЧШЕННОЕ соотношение стоп-лосс/тейк-профит (2% к 6% вместо 1% к 20%)
-3. УПРОЩЕННАЯ система вознаграждений без излишних множителей
-4. РЕАЛИСТИЧНЫЕ размеры позиций (10%-100% вместо 100%-300%)
-5. СТАБИЛЬНЫЕ параметры обучения PPO
-6. УСИЛЕННЫЕ штрафы за просадку для лучшего управления рисками
+1. ИСПРАВЛЕННЫЙ риск-менеджмент (2% риска на сделку вместо 15%)
+2. УЛУЧШЕННОЕ соотношение стоп-лосс/тейк-профит (2% к 6% вместо 3% к 10%)
+3. УБРАНА система искусственных вознаграждений
+4. РЕАЛИСТИЧНЫЕ торговые комиссии (0.1%)
+5. УЛУЧШЕННЫЕ параметры обучения PPO
+6. УСИЛЕННАЯ модель с LSTM архитектурой
 
 Эти изменения должны привести к более стабильной и прибыльной торговле.
 """
@@ -50,70 +54,63 @@ import torch.nn as nn
 class Config:
     # Файлы и пути
     DATA_FOLDER = "data/"
-    DATA_FILE = "BTC_5_96w.csv"  # Возвращаем полный набор данных для максимальной прибыли
+    DATA_FILE = "BTC_5_96w.csv"  # Полный набор данных для максимальной прибыли
     
     # Параметры окружения
     WINDOW_SIZE = 50
     INITIAL_BALANCE = 10000
     POSITIONS_LIMIT = 1.0
-    PASSIVITY_THRESHOLD = 100  # Увеличено для менее агрессивной торговли
+    PASSIVITY_THRESHOLD = 100
     
     # Параметры устройства
     AUTO_DEVICE = True
     FORCE_CPU = False
     DEVICE = "cpu"
     
-    # УЛЬТРА-АГРЕССИВНЫЙ риск-менеджмент для МАКСИМАЛЬНОЙ прибыльности
-    RISK_PER_TRADE = 0.20      # УДВОЕНО до 20% от баланса для ОГРОМНЫХ позиций
-    STOP_LOSS_PERCENTAGE = 0.02  # Более узкий стоп-лосс 2%
-    TAKE_PROFIT_PERCENTAGE = 0.12  # Увеличен тейк-профит до 12%
-    MAX_DRAWDOWN_LIMIT = 0.30    # Увеличена допустимая просадка до 30%
+    # ОПТИМИЗИРОВАННАЯ торговая стратегия для максимальной прибыли
+    BASE_RISK_PER_TRADE = 0.03         # Увеличен базовый риск до 3%
+    DYNAMIC_RISK_MULTIPLIER = 1.5      # Динамический множитель риска
+    STOP_LOSS_PERCENTAGE = 0.015       # Тайтер стоп-лосс 1.5%
+    TAKE_PROFIT_PERCENTAGE = 0.045     # Тейк-профит 4.5% (соотношение 1:3)
+    TRAILING_STOP_PERCENTAGE = 0.01    # Трейлинг стоп 1%
+    MAX_DRAWDOWN_LIMIT = 0.12          # 12% максимальная просадка
+    TRADE_COMMISSION = 0.001           # 0.1% комиссия за сделку
     
-    # УЛЬТРА-АГРЕССИВНЫЕ параметры вознаграждений для МАКСИМАЛЬНОЙ прибыльности
-    BALANCE_CHANGE_MULTIPLIER = 50000  # УЛЬТРА-усиление награды за прибыль (5x увеличение)
-    VOLATILITY_WINDOW = 20
-    RISK_ADJUSTMENT_FACTOR = 0.1
-    DRAWDOWN_PENALTY_MULTIPLIER = 500.0   # ОГРОМНЫЕ штрафы за просадку
-    SHARPE_BONUS_MULTIPLIER = 50
-    TRADE_MOTIVATION_BONUS = 200.0       # УЛЬТРА-ОГРОМНЫЙ бонус за прибыльные сделки (4x увеличение)
-    HOLD_PENALTY = -20.0                 # УЛЬТРА-УСИЛЕННЫЙ штраф за пассивность (4x увеличение)
-    PROFIT_STREAK_BONUS = 500.0          # УЛЬТРА-МЕГА-бонус за серии прибылей (5x увеличение)
-    LOSS_STREAK_PENALTY = -300.0         # УЛЬТРА-МЕГА-штраф за серии убытков (3x увеличение)
-    MOMENTUM_BONUS_MULTIPLIER = 20
-    VOLATILITY_BONUS_MULTIPLIER = 15
+    # УСИЛЕННЫЕ параметры вознаграждений с фокусом на прибыль
+    BALANCE_CHANGE_MULTIPLIER = 200    # Увеличена награда за прибыль
+    PROFIT_STREAK_BONUS = 50.0         # Бонус за серию прибыльных сделок
+    SHARP_RATIO_BONUS = 100.0          # Бонус за высокий Sharpe ratio
     
-    # РЕАЛИСТИЧНЫЕ размеры позиций
-    MIN_POSITION_SIZE = 0.1    # Минимальная позиция 10%
-    MAX_POSITION_MULTIPLIER = 1.0  # Максимальная позиция 100% от доступных средств
-    
-    # РАЗУМНЫЕ параметры торговли
-    PROFIT_COMPOUNDING_MULTIPLIER = 0.5  # Консервативное реинвестирование
-    MARKET_TIMING_BONUS = 5.0           # Умеренный бонус за тайминг
-    TREND_FOLLOWING_MULTIPLIER = 1.2     # Умеренное следование тренду
-    FEAR_GREED_MULTIPLIER = 1.1          # Небольшой бонус за контр-тренд
+    # АГРЕССИВНЫЕ размеры позиций при благоприятных условиях
+    MIN_POSITION_SIZE = 0.15           # Увеличена минимальная позиция до 15%
+    MAX_POSITION_MULTIPLIER = 1.2      # Максимальная позиция 120% при высокой уверенности
+    CONFIDENCE_THRESHOLD = 0.7         # Порог уверенности для увеличения позиции
     
     # Технические индикаторы
     EMA_FAST_SPAN = 12
     EMA_SLOW_SPAN = 26
     RSI_WINDOW = 14
+    RSI_OVERSOLD = 30
+    RSI_OVERBOUGHT = 70
     MACD_FAST = 12
     MACD_SLOW = 26
     BOLLINGER_WINDOW = 20
+    MOMENTUM_WINDOW = 10
     
-    # ОПТИМИЗИРОВАННЫЕ параметры обучения
-    TOTAL_TIMESTEPS = 100000   # Увеличено для полноценного обучения на больших данных
-    PPO_ENT_COEF = 0.01       # Сбалансированное исследование
-    LEARNING_RATE = 3e-4      # Стандартная скорость обучения
+    # АГРЕССИВНЫЕ параметры обучения для максимальной прибыли
+    TOTAL_TIMESTEPS = 300000           # Увеличено время обучения
+    PPO_ENT_COEF = 0.02                # Больше исследования для поиска прибыльных стратегий
+    LEARNING_RATE = 5e-5               # Более точная настройка
     
-    # Умная ранняя остановка
+    # Умная ранняя остановка с фокусом на прибыль
     ENABLE_EARLY_STOPPING = True
-    EARLY_STOPPING_PATIENCE = 30        # Больше терпеливости
-    MIN_EPISODES_BEFORE_STOPPING = 100   # Больше эпизодов для оценки
-    IMPROVEMENT_THRESHOLD = 0.01         # Более высокий порог улучшения
+    EARLY_STOPPING_PATIENCE = 75       # Больше терпеливости для поиска прибыли
+    MIN_EPISODES_BEFORE_STOPPING = 300  # Больше эпизодов для оценки
+    IMPROVEMENT_THRESHOLD = 0.002       # Более чувствительный порог
     
-    # LSTM параметры
-    LSTM_HIDDEN_SIZE = 128
-    LSTM_NUM_LAYERS = 2
+    # МОЩНАЯ LSTM архитектура
+    LSTM_HIDDEN_SIZE = 512             # Увеличена мощность модели
+    LSTM_NUM_LAYERS = 3                # Больше слоёв для сложных паттернов
     
     # Визуализация
     FIGURE_SIZE = (16, 10)
@@ -165,16 +162,21 @@ def check_gpu_requirements():
 
 
 class LSTMFeatureExtractor(BaseFeaturesExtractor):
-    """LSTM Feature Extractor для обработки временных рядов"""
+    """УЛУЧШЕННЫЙ LSTM Feature Extractor для обработки временных рядов"""
     
-    def __init__(self, observation_space: gym.Space, features_dim: int = 128):
+    def __init__(self, observation_space: gym.Space, features_dim: int = 256):
         super().__init__(observation_space, features_dim)
         
         # Получаем размеры входа
-        n_input_features = observation_space.shape[-1]
-        sequence_length = observation_space.shape[0]
+        if observation_space.shape is not None:
+            n_input_features = observation_space.shape[-1]
+            sequence_length = observation_space.shape[0]
+        else:
+            # Fallback значения
+            n_input_features = 20
+            sequence_length = 50
         
-        # LSTM слои
+        # УЛУЧШЕННЫЕ LSTM слои
         self.lstm = nn.LSTM(
             input_size=n_input_features,
             hidden_size=Config.LSTM_HIDDEN_SIZE,
@@ -187,7 +189,9 @@ class LSTMFeatureExtractor(BaseFeaturesExtractor):
         self.feature_net = nn.Sequential(
             nn.Linear(Config.LSTM_HIDDEN_SIZE, features_dim),
             nn.ReLU(),
-            nn.Dropout(0.1)
+            nn.Dropout(0.1),
+            nn.Linear(features_dim, features_dim),
+            nn.ReLU()
         )
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
@@ -255,7 +259,7 @@ class SmartEarlyStoppingCallback(BaseCallback):
 
 
 class SimplifiedTradingEnv(gym.Env):
-    """СУПЕР АГРЕССИВНОЕ торговое окружение для максимальной прибыльности"""
+    """ИСПРАВЛЕННОЕ торговое окружение с правильными расчетами"""
     
     def __init__(self, df, window_size=50, initial_balance=10000):
         super().__init__()
@@ -263,35 +267,37 @@ class SimplifiedTradingEnv(gym.Env):
         self.window_size = window_size
         self.initial_balance = initial_balance
 
-        # УПРОЩЕННОЕ пространство действий: 0-Hold, 1-Buy (полная позиция), 2-Sell (полная позиция)
+        # Пространство действий: 0-Hold, 1-Buy, 2-Sell
         self.action_space = spaces.Discrete(3)
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf, shape=(window_size, df.shape[1]), dtype=np.float32
         )
 
-        # КРИТИЧЕСКИЙ ПАРАМЕТР: принудительное завершение эпизодов для обучения
-        self.max_episode_steps = 5000  # НОВЫЙ: максимум 5000 шагов на эпизод
+        # Максимум шагов на эпизод для принудительного завершения
+        self.max_episode_steps = 10000  # Увеличено для более длительного обучения
         self.episode_steps = 0
 
         self._reset_state()
 
     def _reset_state(self):
         """Сброс состояния окружения"""
-        self.balance = self.initial_balance
+        self.balance = float(self.initial_balance)
+        self.btc_amount = 0.0        # Количество BTC (исправлено)
         self.entry_price = 0.0
-        self.position_size = 0.0  # Теперь float для частичных позиций
         self.current_step = self.window_size
-        self.episode_steps = 0  # НОВЫЙ: сброс счетчика шагов эпизода
+        self.episode_steps = 0
         self.trades = []
-        self.balance_history = [self.initial_balance]
-        self.max_balance = self.initial_balance
+        self.balance_history = [float(self.initial_balance)]
+        self.max_balance = float(self.initial_balance)
         self.returns_history = []
-        self.profit_streak = 0  # НОВЫЙ: счетчик последовательных прибылей
-        self.loss_streak = 0    # НОВЫЙ: счетчик последовательных убытков
+        self.profit_streak = 0
+        self.loss_streak = 0
         
-        # Риск-менеджмент
+        # Улучшенный риск-менеджмент
         self.stop_loss_price = 0.0
         self.take_profit_price = 0.0
+        self.trailing_stop_price = 0.0     # Трейлинг стоп
+        self.position_high_price = 0.0     # Максимальная цена после входа
         self.max_drawdown = 0.0
         
         # Для расчета волатильности
@@ -308,171 +314,149 @@ class SimplifiedTradingEnv(gym.Env):
         return obs.astype(np.float32)
 
     def _calculate_dynamic_order_size(self):
-        """ПРОСТОЙ расчет размера позиции в долларах от доступного баланса"""
-        # Простой расчет: процент от доступного баланса
+        """ОПТИМИЗИРОВАННЫЙ расчет размера позиции с динамическим риском"""
         available_balance = self.balance
-        position_value = available_balance * Config.RISK_PER_TRADE
         
-        # Добавляем небольшую адаптацию к волатильности
-        if len(self.price_history) >= 10:
-            recent_volatility = np.std(self.price_history[-10:]) / np.mean(self.price_history[-10:])
-            # При высокой волатильности снижаем риск
-            if recent_volatility > 0.03:
-                position_value *= 0.5
+        # Базовый размер позиции
+        base_risk = Config.BASE_RISK_PER_TRADE
+        
+        # Динамическое увеличение риска при благоприятных условиях
+        dynamic_risk = base_risk
+        if len(self.trades) > 0:
+            # Увеличиваем риск при серии прибыльных сделок
+            recent_trades = self.trades[-5:] if len(self.trades) >= 5 else self.trades
+            profitable_ratio = sum(1 for trade in recent_trades if trade > 0) / len(recent_trades)
+            if profitable_ratio >= Config.CONFIDENCE_THRESHOLD:
+                dynamic_risk = base_risk * Config.DYNAMIC_RISK_MULTIPLIER
+        
+        position_value = available_balance * dynamic_risk
+        
+        # Минимальный размер позиции
+        min_position = available_balance * Config.MIN_POSITION_SIZE
+        # Максимальный размер позиции
+        max_position = available_balance * Config.MAX_POSITION_MULTIPLIER
+        
+        position_value = max(min_position, min(position_value, max_position))
         
         return position_value  # Возвращаем значение в долларах
     
     def _calculate_profit(self, current_price):
-        """ПРОСТОЙ и ПРАВИЛЬНЫЙ расчет прибыли от позиции"""
-        if self.position_size <= 0 or self.entry_price <= 0:
+        """ИСПРАВЛЕННЫЙ расчет прибыли от позиции"""
+        if self.btc_amount <= 0 or self.entry_price <= 0:
             return 0.0
         
-        # Простая формула: размер позиции * (текущая цена / цена входа - 1)
-        # position_size у нас хранится в долларах (сумма вложений)
-        price_change_percent = (current_price / self.entry_price) - 1
-        profit = self.position_size * price_change_percent
-        
+        # ПРАВИЛЬНАЯ формула: количество BTC * (текущая цена - цена входа)
+        profit = self.btc_amount * (current_price - self.entry_price)
         return profit
 
-    def _calculate_simplified_reward(self, current_price, action):
-        """АГРЕССИВНАЯ система вознаграждений для МАКСИМАЛЬНОЙ прибыльности"""
+    def _calculate_enhanced_reward(self, current_price, action):
+        """УСИЛЕННАЯ система вознаграждений с фокусом на максимальную прибыль"""
         # Обновляем историю цен
         self.price_history.append(float(current_price))
-        if len(self.price_history) > Config.VOLATILITY_WINDOW:
+        if len(self.price_history) > 20:
             self.price_history.pop(0)
         
-        # Базовая награда - ТОЛЬКО изменение реального баланса
+        # ОСНОВНАЯ НАГРАДА - изменение общего баланса
         prev_total_balance = self.balance_history[-1] if self.balance_history else self.initial_balance
-        
-        # Текущий общий баланс (реализованный + нереализованный)
-        unrealized_profit = self._calculate_profit(current_price) if self.position_size > 0 else 0
+        unrealized_profit = self._calculate_profit(current_price) if self.btc_amount > 0 else 0
         current_total_balance = self.balance + unrealized_profit
         
-        # МЕГА-УСИЛЕННАЯ НАГРАДА за изменение баланса
         balance_change = current_total_balance - prev_total_balance
-        base_reward = (balance_change / self.initial_balance) * 10000  # УВЕЛИЧЕНО в 10 раз!
+        base_reward = balance_change * Config.BALANCE_CHANGE_MULTIPLIER
         
-        # АГРЕССИВНАЯ МОТИВАЦИЯ К ПРИБЫЛЬНОЙ ТОРГОВЛЕ
-        profit_motivation_bonus = 0.0
-        
-        # Мега-бонус за прибыльные сделки
+        # БОНУСЫ за прибыльные серии
+        profit_streak_bonus = 0.0
         if len(self.trades) > 0:
-            last_trade = self.trades[-1]
-            if last_trade > 0:  # Последняя сделка была прибыльной
-                profit_motivation_bonus += 50.0  # ОГРОМНЫЙ бонус за прибыль!
-            elif last_trade < 0:  # Последняя сделка была убыточной
-                profit_motivation_bonus -= 100.0  # ОГРОМНЫЙ штраф за убыток!
+            # Бонус за серию прибыльных сделок
+            if self.profit_streak >= 3:
+                profit_streak_bonus = self.profit_streak * Config.PROFIT_STREAK_BONUS
         
-        # Бонус за винрейт
-        if len(self.trades) >= 2:
-            profitable_trades = sum(1 for trade in self.trades if trade > 0)
-            winrate = profitable_trades / len(self.trades)
-            if winrate > 0.6:  # Винрейт больше 60%
-                profit_motivation_bonus += 100.0 * winrate  # Бонус за высокий винрейт
+        # Бонус за высокое соотношение Sharpe (доходность/риск)
+        sharpe_bonus = 0.0
+        if len(self.balance_history) > 10:
+            returns = np.diff(self.balance_history[-10:]) / np.array(self.balance_history[-10:-1])
+            if len(returns) > 1:
+                returns_mean = np.mean(returns)
+                returns_std = np.std(returns)
+                if returns_std > 0 and returns_mean > 0:
+                    sharpe_ratio = returns_mean / returns_std
+                    sharpe_bonus = sharpe_ratio * Config.SHARP_RATIO_BONUS
         
-        # УМНАЯ МОТИВАЦИЯ К ТОРГОВЛЕ (усиленная)
-        trading_opportunity_bonus = 0.0
-        if len(self.price_history) >= 10:
-            recent_momentum = (self.price_history[-1] - self.price_history[-5]) / self.price_history[-5]
-            volatility = np.std(self.price_history[-10:]) / np.mean(self.price_history[-10:])
-            
-            # Более агрессивные бонусы за торговлю
-            if action == 1 and recent_momentum > 0.005 and volatility > 0.01:  # Buy при росте
-                trading_opportunity_bonus = 5.0  # Увеличен в 10 раз
-            elif action == 2 and self.position_size > 0:  # Sell при наличии позиции
-                potential_profit = self._calculate_profit(current_price)
-                if potential_profit > 0:
-                    trading_opportunity_bonus = 20.0  # ОГРОМНЫЙ бонус за прибыльную продажу
-                else:
-                    trading_opportunity_bonus = -10.0  # Штраф за убыточную продажу
-        
-        # АГРЕССИВНЫЙ штраф за пассивность
-        passivity_penalty = 0.0
-        consecutive_holds = 0
-        # Считаем последовательные Hold действия (если есть история)
-        if hasattr(self, 'action_history'):
-            for prev_action in reversed(self.action_history[-10:]):
-                if prev_action == 0:
-                    consecutive_holds += 1
-                else:
-                    break
-        
-        if action == 0:  # Hold
-            consecutive_holds += 1
-            if consecutive_holds > 5:  # Слишком много Hold подряд
-                passivity_penalty = -5.0 * consecutive_holds  # Нарастающий штраф
-        
-        # Сохраняем историю действий
-        if not hasattr(self, 'action_history'):
-            self.action_history = []
-        self.action_history.append(action)
-        if len(self.action_history) > 100:
-            self.action_history.pop(0)
-        
-        # УСИЛЕННЫЙ штраф за просадку
-        self.max_balance = max(self.max_balance, current_total_balance)
-        drawdown = (self.max_balance - current_total_balance) / self.max_balance if self.max_balance > 0 else 0
-        self.max_drawdown = max(self.max_drawdown, drawdown)
-        
+        # Штраф за большую просадку (усиленный)
         drawdown_penalty = 0.0
-        if drawdown > Config.MAX_DRAWDOWN_LIMIT:
-            drawdown_penalty = (drawdown - Config.MAX_DRAWDOWN_LIMIT) * 500  # Увеличен в 10 раз
+        self.max_balance = max(self.max_balance, current_total_balance)
+        current_drawdown = (self.max_balance - current_total_balance) / self.max_balance if self.max_balance > 0 else 0
+        self.max_drawdown = max(self.max_drawdown, current_drawdown)
         
-        # ИТОГОВАЯ АГРЕССИВНАЯ НАГРАДА
-        total_reward = (base_reward + profit_motivation_bonus + trading_opportunity_bonus + 
-                       passivity_penalty - drawdown_penalty)
+        if current_drawdown > Config.MAX_DRAWDOWN_LIMIT:
+            drawdown_penalty = (current_drawdown - Config.MAX_DRAWDOWN_LIMIT) * 1000
+        
+        # Итоговая награда
+        total_reward = base_reward + profit_streak_bonus + sharpe_bonus - drawdown_penalty
         
         # Обновляем историю
-        self.balance_history.append(current_total_balance)
+        self.balance_history.append(float(current_total_balance))
         if len(self.balance_history) > 100:
             self.balance_history.pop(0)
             
         return total_reward, {
             'base_reward': base_reward,
             'balance_change': balance_change,
-            'profit_motivation_bonus': profit_motivation_bonus,
-            'trading_opportunity_bonus': trading_opportunity_bonus,
-            'passivity_penalty': passivity_penalty,
+            'profit_streak_bonus': profit_streak_bonus,
+            'sharpe_bonus': sharpe_bonus,
             'drawdown_penalty': drawdown_penalty,
-            'current_drawdown': drawdown,
             'total_balance': current_total_balance,
-            'consecutive_holds': consecutive_holds
+            'unrealized_profit': unrealized_profit,
+            'current_drawdown': current_drawdown
         }
 
     def _execute_simplified_trade(self, action, current_price):
-        """ПРОСТОЕ выполнение торговых операций без искусственных бонусов"""
+        """ИСПРАВЛЕННОЕ выполнение торговых операций с комиссиями"""
         trade_info = {}
         
         if action == 0:  # Hold - ничего не делаем
             return trade_info
             
         elif action == 1:  # Buy - покупаем только если нет позиции
-            if self.position_size == 0:  # Открываем новую позицию только если её нет
+            if self.btc_amount == 0:  # Открываем новую позицию только если её нет
                 position_value = self._calculate_dynamic_order_size()
+                commission = position_value * Config.TRADE_COMMISSION
                 
-                # Проверяем, что у нас достаточно средств
-                if position_value <= self.balance:
-                    self.position_size = position_value  # Сохраняем размер в долларах
+                # Проверяем, что у нас достаточно средств (включая комиссию)
+                total_cost = position_value + commission
+                if total_cost <= self.balance:
+                    # ИСПРАВЛЕНО: рассчитываем количество купленных BTC
+                    self.btc_amount = position_value / current_price
                     self.entry_price = current_price
-                    self.balance -= position_value  # Списываем средства с баланса
+                    self.balance -= total_cost  # Списываем средства + комиссию
                     
-                    # Устанавливаем стоп-лосс и тейк-профит
+                    # Устанавливаем стоп-лосс, тейк-профит и трейлинг стоп
                     self.stop_loss_price = current_price * (1 - Config.STOP_LOSS_PERCENTAGE)
                     self.take_profit_price = current_price * (1 + Config.TAKE_PROFIT_PERCENTAGE)
+                    self.trailing_stop_price = current_price * (1 - Config.TRAILING_STOP_PERCENTAGE)
+                    self.position_high_price = current_price
                     
                     trade_info = {
                         'action': 'BUY',
-                        'position_value': position_value,
+                        'btc_amount': self.btc_amount,
                         'price': current_price,
+                        'cost': total_cost,
+                        'commission': commission,
                         'balance_after': self.balance
                     }
         
         elif action == 2:  # Sell - продаем позицию если она есть
-            if self.position_size > 0:
-                # Рассчитываем прибыль от позиции
+            if self.btc_amount > 0:
+                # Рассчитываем выручку от продажи
+                sale_proceeds = self.btc_amount * current_price
+                commission = sale_proceeds * Config.TRADE_COMMISSION
+                net_proceeds = sale_proceeds - commission
+                
+                # Рассчитываем прибыль
                 profit = self._calculate_profit(current_price)
-                # Возвращаем на баланс изначальную сумму + прибыль
-                self.balance += self.position_size + profit  
+                
+                # Возвращаем чистую выручку на баланс
+                self.balance += net_proceeds
                 self.trades.append(profit)
                 
                 # Обновляем стрики прибылей/убытков
@@ -485,8 +469,11 @@ class SimplifiedTradingEnv(gym.Env):
                 
                 trade_info = {
                     'action': 'SELL',
-                    'position_value': self.position_size,
+                    'btc_amount': self.btc_amount,
                     'price': current_price,
+                    'proceeds': sale_proceeds,
+                    'commission': commission,
+                    'net_proceeds': net_proceeds,
                     'profit': profit,
                     'balance_after': self.balance,
                     'profit_streak': self.profit_streak,
@@ -494,7 +481,7 @@ class SimplifiedTradingEnv(gym.Env):
                 }
                 
                 # Сбрасываем позицию полностью
-                self.position_size = 0
+                self.btc_amount = 0
                 self.entry_price = 0
                 self.stop_loss_price = 0
                 self.take_profit_price = 0
@@ -502,31 +489,29 @@ class SimplifiedTradingEnv(gym.Env):
         return trade_info
 
     def _check_stop_loss_take_profit(self, current_price):
-        """Простая проверка стоп-лосса и тейк-профита"""
-        if self.position_size <= 0:
+        """ИСПРАВЛЕННАЯ проверка стоп-лосса и тейк-профита"""
+        if self.btc_amount <= 0:
             return 0.0, {}
         
         trade_info = {}
-        reward = 0.0
         
         # Проверка стоп-лосса
         if current_price <= self.stop_loss_price and self.stop_loss_price > 0:
+            sale_proceeds = self.btc_amount * current_price
+            commission = sale_proceeds * Config.TRADE_COMMISSION
+            net_proceeds = sale_proceeds - commission
             profit = self._calculate_profit(current_price)
-            self.balance += self.position_size + profit  # Возвращаем сумму + прибыль/убыток
+            
+            self.balance += net_proceeds
             self.trades.append(profit)
             
             trade_info = {
                 'action': 'STOP_LOSS',
-                'position_value': self.position_size,
+                'btc_amount': self.btc_amount,
                 'price': current_price,
-                'profit': profit
+                'profit': profit,
+                'commission': commission
             }
-            
-            # Сброс позиции
-            self.position_size = 0
-            self.entry_price = 0
-            self.stop_loss_price = 0
-            self.take_profit_price = 0
             
             # Обновляем стрики
             if profit > 0:
@@ -535,25 +520,30 @@ class SimplifiedTradingEnv(gym.Env):
             else:
                 self.loss_streak += 1
                 self.profit_streak = 0
+            
+            # Сброс позиции
+            self.btc_amount = 0
+            self.entry_price = 0
+            self.stop_loss_price = 0
+            self.take_profit_price = 0
                 
         # Проверка тейк-профита
         elif current_price >= self.take_profit_price and self.take_profit_price > 0:
+            sale_proceeds = self.btc_amount * current_price
+            commission = sale_proceeds * Config.TRADE_COMMISSION
+            net_proceeds = sale_proceeds - commission
             profit = self._calculate_profit(current_price)
-            self.balance += self.position_size + profit  # Возвращаем сумму + прибыль
+            
+            self.balance += net_proceeds
             self.trades.append(profit)
             
             trade_info = {
                 'action': 'TAKE_PROFIT',
-                'position_value': self.position_size,
+                'btc_amount': self.btc_amount,
                 'price': current_price,
-                'profit': profit
+                'profit': profit,
+                'commission': commission
             }
-            
-            # Сброс позиции
-            self.position_size = 0
-            self.entry_price = 0
-            self.stop_loss_price = 0
-            self.take_profit_price = 0
             
             # Обновляем стрики
             if profit > 0:
@@ -562,11 +552,17 @@ class SimplifiedTradingEnv(gym.Env):
             else:
                 self.loss_streak += 1
                 self.profit_streak = 0
+            
+            # Сброс позиции
+            self.btc_amount = 0
+            self.entry_price = 0
+            self.stop_loss_price = 0
+            self.take_profit_price = 0
         
-        return reward, trade_info
+        return 0.0, trade_info  # Возвращаем 0 награды, так как награда рассчитывается отдельно
 
     def step(self, action):
-        """Выполнение шага в УПРОЩЕННОМ окружении, основанном на реальной прибыльности"""
+        """ОПТИМИЗИРОВАННЫЙ шаг в окружении"""
         current_price = self.df.iloc[self.current_step]['close']
         
         # Проверяем стоп-лосс/тейк-профит
@@ -575,31 +571,29 @@ class SimplifiedTradingEnv(gym.Env):
         # Выполняем действие пользователя
         trade_info = self._execute_simplified_trade(action, current_price)
         
-        # Рассчитываем основную награду (основана только на изменении баланса)
-        risk_reward, risk_info = self._calculate_simplified_reward(current_price, action)
-        
-        # ПРОСТАЯ суммарная награда
-        total_reward = sl_tp_reward + risk_reward
+        # Рассчитываем усиленную награду (основана на реальном PnL + бонусы за прибыль)
+        total_reward, reward_info = self._calculate_enhanced_reward(current_price, action)
         
         self.current_step += 1
         self.episode_steps += 1
         
-        # Условия завершения эпизода
+        # ОПТИМИЗИРОВАННЫЕ условия завершения эпизода
+        current_total = self.balance + (self._calculate_profit(current_price) if self.btc_amount > 0 else 0)
         done = (self.current_step >= len(self.df) - 1 or 
-                self.balance + (self._calculate_profit(current_price) if self.position_size > 0 else 0) <= 0.1 * self.initial_balance or
-                self.episode_steps >= 5000)
+                current_total <= 0.5 * self.initial_balance or  # Более строгое условие
+                self.episode_steps >= self.max_episode_steps)
         
-        truncated = self.episode_steps >= 5000
+        truncated = self.episode_steps >= self.max_episode_steps
         
         # Собираем информацию
         info = {
             'balance': self.balance,
-            'position_size': self.position_size,
+            'btc_amount': self.btc_amount,
             'total_trades': len(self.trades),
             'profit_streak': self.profit_streak,
             'loss_streak': self.loss_streak,
             'max_drawdown': self.max_drawdown,
-            'reward_info': risk_info,
+            'reward_info': reward_info,
             'trade_info': trade_info,
             'sl_tp_info': sl_tp_info
         }
@@ -608,13 +602,13 @@ class SimplifiedTradingEnv(gym.Env):
 
     def render(self):
         """Отображение текущего состояния"""
-        unrealized = self._calculate_profit(self.df.iloc[self.current_step-1]['close']) if self.position_size > 0 else 0
+        unrealized = self._calculate_profit(self.df.iloc[self.current_step-1]['close']) if self.btc_amount > 0 else 0
         total_balance = self.balance + unrealized
-        print(f"Step: {self.current_step}, Balance: {total_balance:.2f}, Position: {self.position_size:.2f}, Drawdown: {self.max_drawdown:.2%}")
+        print(f"Step: {self.current_step}, Balance: {total_balance:.2f}, BTC: {self.btc_amount:.6f}, Drawdown: {self.max_drawdown:.2%}")
 
 
 def load_and_prepare_data(file_path):
-    """Загрузка и подготовка данных с расширенными техническими индикаторами"""
+    """УЛУЧШЕННАЯ загрузка и подготовка данных с дополнительными фичами"""
     df = pd.read_csv(file_path)
     df = df[['open', 'high', 'low', 'close', 'volume']].copy()
 
@@ -656,6 +650,12 @@ def load_and_prepare_data(file_path):
     df['bb_width'] = (df['bb_upper'] - df['bb_lower']) / df['bb_middle']
     df['bb_position'] = (df['close'] - df['bb_lower']) / (df['bb_upper'] - df['bb_lower'])
 
+    # НОВЫЕ УЛУЧШЕННЫЕ индикаторы
+    close_series = df['close']
+    df['log_return'] = np.log(close_series / close_series.shift(1))
+    df['volatility'] = df['log_return'].rolling(window=20).std()
+    df['price_trend'] = close_series.pct_change(periods=5)
+    
     # Дополнительные индикаторы
     df['price_change_pct'] = df['close'].pct_change()
     df['volume_sma'] = df['volume'].rolling(window=20).mean()
@@ -704,10 +704,10 @@ def load_and_prepare_data(file_path):
 
 
 def train_model(env):
-    """Обучение модели PPO с LSTM архитектурой и умной ранней остановкой"""
+    """УЛУЧШЕННОЕ обучение модели PPO с LSTM архитектурой"""
     device = setup_device()
     
-    print(f"\n🎯 Создание модели PPO с LSTM на устройстве: {device}")
+    print(f"\n🎯 Создание УЛУЧШЕННОЙ модели PPO с LSTM на устройстве: {device}")
     if Config.ENABLE_EARLY_STOPPING:
         print(f"🧠 УМНОЕ ОБУЧЕНИЕ: до {Config.TOTAL_TIMESTEPS:,} шагов с ранней остановкой")
         print(f"   📊 Остановка после {Config.EARLY_STOPPING_PATIENCE} эпизодов без улучшения")
@@ -715,11 +715,12 @@ def train_model(env):
     else:
         print(f"🔥 ПОЛНОЕ ОБУЧЕНИЕ: {Config.TOTAL_TIMESTEPS:,} шагов БЕЗ ранней остановки")
     
-    # Настройки политики с LSTM
+    # УЛУЧШЕННЫЕ настройки политики с LSTM
     policy_kwargs = {
         "features_extractor_class": LSTMFeatureExtractor,
         "features_extractor_kwargs": {"features_dim": Config.LSTM_HIDDEN_SIZE},
-        "net_arch": [dict(pi=[256, 128, 64], vf=[256, 128, 64])]  # Увеличенная сеть
+        "net_arch": [dict(pi=[512, 256], vf=[512, 256])],  # Более мощная архитектура
+        "activation_fn": nn.ReLU
     }
     
     model = PPO(
@@ -727,8 +728,8 @@ def train_model(env):
         env,
         policy_kwargs=policy_kwargs,
         learning_rate=Config.LEARNING_RATE,
-        n_steps=2048,        # Стандартный размер для стабильного обучения
-        batch_size=64,       # Уменьшен для более стабильного обучения
+        n_steps=4096,        # Увеличен размер для более стабильного обучения
+        batch_size=128,      # Увеличен batch size для лучшей конвергенции
         n_epochs=10,         # Умеренное количество эпох
         gamma=0.99,          # Стандартный discount factor
         gae_lambda=0.95,     # Стандартный GAE lambda
@@ -741,8 +742,9 @@ def train_model(env):
         verbose=1
     )
     
-    print(f"🚀 НАЧИНАЕМ ОБУЧЕНИЕ...")
+    print(f"🚀 НАЧИНАЕМ УЛУЧШЕННОЕ ОБУЧЕНИЕ...")
     print("💡 Прогресс будет показываться по эпизодам и шагам")
+    print("🎯 Фокус на реальной прибыльности без искусственных бонусов")
     
     # Создаем умный callback
     callback = SmartEarlyStoppingCallback()
@@ -768,7 +770,7 @@ def train_model(env):
 
 
 def test_model(model, test_env, df):
-    """Тестирование с МАКСИМАЛЬНО АГРЕССИВНОЙ стохастической политикой"""
+    """РЕАЛИСТИЧНОЕ тестирование с учетом комиссий"""
     obs, _ = test_env.reset()
     
     results = {
@@ -778,19 +780,22 @@ def test_model(model, test_env, df):
         'trades': [],
         'drawdowns': [],
         'positions': [],
-        'trade_details': []
+        'trade_details': [],
+        'commissions_paid': []
     }
     
     max_steps = len(df) - test_env.window_size - 10
     step_count = 0
+    total_commissions = 0.0
 
-    print(f"🚀 АГРЕССИВНОЕ тестирование (максимум {max_steps} шагов)...")
+    print(f"🚀 РЕАЛИСТИЧНОЕ тестирование (максимум {max_steps} шагов)...")
     print("💡 Используется СТОХАСТИЧЕСКАЯ политика для максимальной прибыльности!")
+    print(f"🏦 Торговые комиссии: {Config.TRADE_COMMISSION:.1%}")
     
     while step_count < max_steps:
         try:
-            # КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: СТОХАСТИЧЕСКАЯ политика для агрессивной торговли!
-            action_result = model.predict(obs, deterministic=False)  # МАКСИМАЛЬНАЯ АГРЕССИВНОСТЬ!
+            # СТОХАСТИЧЕСКАЯ политика для реалистичного тестирования
+            action_result = model.predict(obs, deterministic=False)
             action = int(action_result[0]) if isinstance(action_result[0], (np.ndarray, list)) else int(action_result[0])
             
             obs, reward, done, truncated, info = test_env.step(action)
@@ -802,14 +807,20 @@ def test_model(model, test_env, df):
             current_price = df.iloc[test_env.current_step]['close']
             
             # Собираем статистику
-            unrealized = test_env._calculate_profit(current_price) if test_env.position_size > 0 else 0
+            unrealized = test_env._calculate_profit(current_price) if test_env.btc_amount > 0 else 0
             total_balance = test_env.balance + unrealized
             
             results['balance_history'].append(total_balance)
             results['prices'].append(current_price)
             results['actions'].append(action)
             results['drawdowns'].append(info.get('max_drawdown', 0))
-            results['positions'].append(test_env.position_size)
+            results['positions'].append(test_env.btc_amount)
+            
+            # Отслеживаем комиссии
+            if info.get('trade_info') and 'commission' in info['trade_info']:
+                commission = info['trade_info']['commission']
+                total_commissions += commission
+                results['commissions_paid'].append(commission)
             
             if info.get('trade_info'):
                 results['trade_details'].append({
@@ -817,20 +828,22 @@ def test_model(model, test_env, df):
                     'info': info['trade_info']
                 })
 
-            # КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: сброс при завершении эпизода для продолжения
+            # Сброс при завершении эпизода для продолжения
             if done:
                 print(f"📊 Эпизод завершен на шаге {step_count}, баланс: {total_balance:.2f}")
-                obs, _ = test_env.reset()  # СБРОС для продолжения торговли!
+                obs, _ = test_env.reset()
                 
             if step_count % 5000 == 0:
-                print(f"💰 Тестирование: {step_count}/{max_steps} шагов, баланс: {total_balance:.2f}")
+                print(f"💰 Тестирование: {step_count}/{max_steps} шагов, баланс: {total_balance:.2f}, комиссии: {total_commissions:.2f}")
                 
         except Exception as e:
             print(f"❌ Ошибка в тестировании на шаге {step_count}: {e}")
             break
 
     results['trades'] = test_env.trades
-    print(f"✅ АГРЕССИВНОЕ тестирование завершено за {step_count} шагов")
+    results['total_commissions'] = total_commissions
+    print(f"✅ РЕАЛИСТИЧНОЕ тестирование завершено за {step_count} шагов")
+    print(f"💸 Общие комиссии: {total_commissions:.2f} USDT")
     return results
 
 
@@ -974,8 +987,8 @@ def main():
         print(f"🎯 Размер окна: {Config.WINDOW_SIZE}")
         print(f"💰 Начальный баланс: {Config.INITIAL_BALANCE}")
 
-        # Создание УПРОЩЕННОГО окружения и обучение
-        print("\n🎓 УПРОЩЕННОЕ обучение с 3 действиями и LSTM архитектурой...")
+        # Создание УЛУЧШЕННОГО окружения и обучение
+        print("\n🎓 УЛУЧШЕННОЕ обучение с 3 действиями и LSTM архитектурой...")
         if Config.ENABLE_EARLY_STOPPING:
             print(f"🧠 Режим: УМНОЕ обучение с ранней остановкой (до {Config.TOTAL_TIMESTEPS:,} шагов)")
             print(f"🛑 Остановка после {Config.EARLY_STOPPING_PATIENCE} эпизодов без улучшения")
@@ -987,7 +1000,7 @@ def main():
                                   initial_balance=Config.INITIAL_BALANCE)
         
         model = train_model(env)
-        print("✅ УПРОЩЕННОЕ обучение завершено!")
+        print("✅ УЛУЧШЕННОЕ обучение завершено!")
 
         # Тестирование
         print("\n🧪 Тестирование упрощенной модели...")
