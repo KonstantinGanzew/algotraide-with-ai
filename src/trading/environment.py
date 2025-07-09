@@ -127,6 +127,11 @@ class ImprovedTradingEnv(gym.Env):
         self.episode_steps = 0
         self.prev_portfolio_value = float(self.initial_balance)
     
+    @property
+    def data(self):
+        """Совместимость с кодом, который ожидает атрибут data"""
+        return self.df
+    
     def reset(self, seed=None, options=None):
         """Сброс окружения"""
         if seed is not None:
