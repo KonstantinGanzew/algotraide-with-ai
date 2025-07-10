@@ -10,46 +10,23 @@ from gymnasium import spaces
 import matplotlib.pyplot as plt
 from typing import Dict, Tuple, Any
 import warnings
+
 warnings.filterwarnings('ignore')
 
-# Попытка импорта DirectML для AMD GPU
-try:
-    import torch_directml
-    DIRECTML_AVAILABLE = True
-    print("✅ DirectML найден - AMD GPU поддержка включена")
-except ImportError:
-    DIRECTML_AVAILABLE = False
-    print("ℹ️ DirectML не найден - будет использован CPU")
-
-def get_device():
-    """Автоматический выбор лучшего устройства"""
-    if DIRECTML_AVAILABLE:
-        device = torch_directml.device()
-        print(f"🚀 Используется DirectML устройство: {device}")
-        return device
-    elif torch.cuda.is_available():
-        device = torch.device("cuda")
-        print(f"🚀 Используется CUDA устройство: {device}")
-        return device
-    else:
-        device = torch.device("cpu")
-        print(f"💻 Используется CPU: {device}")
-        return device
-
 """
-🚀 ТОРГОВАЯ СИСТЕМА V6.1 - СПЕЦИАЛИСТ
-✅ ИСПРАВЛЕНА ОШИБКА CNN: Создана кастомная сверточная сеть (CustomCNN), совместимая с размером наших данных.
-    - Это позволяет использовать CnnPolicy правильно, без отказа от анализа временных паттернов.
-✅ Сохранена философия V6.0 "Терпеливый Охотник": Sparse Rewards и реальная стоимость действия.
-✅ Цель: Запустить первую по-настоящему рабочую версию с CnnPolicy и оценить ее потенциал.
+🚀 ТОРГОВАЯ СИСТЕМА V6.2 - ЛОГИКА ИСПРАВЛЕНА
+✅ ИСПРАВЛЕНА КЛЮЧЕВАЯ ОШИБКА ЛОГИКИ: Пространство действий расширено до 3 (Hold, Buy, Sell).
+   - Агент теперь может принимать осмысленные решения: открыть позицию, закрыть ее или удерживать.
+   - Устранен "цикл смерти" (открытие-закрытие на соседних шагах), который сжигал баланс.
+✅ Улучшена логика штрафа за действие (ACTION_COST), теперь он применяется и на открытие, и на закрытие.
+✅ Сохранена кастомная CNN и философия "Терпеливого Охотника".
+✅ Цель: Получить первую логически корректную версию и оценить ее способность к обучению.
 """
 
 # Враппер, необходимый для CnnPolicy
 class ChannelFirstWrapper(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
-        if env.observation_space is None or env.observation_space.shape is None:
-            raise ValueError("Environment observation space is not properly initialized")
         old_shape = env.observation_space.shape
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(1, old_shape[0], old_shape[1]), dtype=np.float32)
 
@@ -80,6 +57,7 @@ class CustomCNN(BaseFeaturesExtractor):
 
         # Вычисляем размерность после сверток, чтобы создать правильный линейный слой
         with torch.no_grad():
+            # Добавляем .float() для совместимости типов
             n_flatten = self.cnn(torch.as_tensor(observation_space.sample()[None]).float()).shape[1]
 
         self.linear = nn.Sequential(
@@ -98,17 +76,15 @@ class TrendTraderConfig:
     ATR_SL_MULTIPLIER = 2.0
     ATR_TP_MULTIPLIER = 6.0
     TRANSACTION_FEE = 0.001
-    ACTION_COST = 1.0 
+    ACTION_COST = 0.1  # Снизил стоимость, так как она теперь более значима
     WINDOW_SIZE = 64
-    # Уменьшено для быстрого тестирования на GPU. Увеличьте до 1000000+ для полного обучения
-    TOTAL_TIMESTEPS = 500000  
+    TOTAL_TIMESTEPS = 1000000
     LEARNING_RATE = 3e-4
     ENTROPY_COEF = 0.01
     GAMMA = 0.999
     TREND_PROFIT_BONUS = 0.1
 
 class SimpleDataLoader:
-    # ... (Этот класс без изменений)
     def __init__(self, data_path: str):
         self.data_path = data_path
 
@@ -155,7 +131,6 @@ class SimpleDataLoader:
         return features, prices_df[['timestamp', 'open', 'high', 'low', 'close', 'atr_value']]
 
 class TradingEnv(gym.Env):
-    # ... (Этот класс без изменений)
     metadata = {'render_modes': ['human']}
     def __init__(self, features_df: pd.DataFrame, prices_df: pd.DataFrame):
         super().__init__()
@@ -163,8 +138,15 @@ class TradingEnv(gym.Env):
         self.prices_df = prices_df.reset_index(drop=True)
         self.cfg = TrendTraderConfig()
         
-        self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self.cfg.WINDOW_SIZE, self.features_df.shape[1]), dtype=np.float32)
+        ### ИЗМЕНЕНИЕ 1: Пространство действий ###
+        # 0: Hold, 1: Buy, 2: Sell
+        self.action_space = spaces.Discrete(3)
+        
+        self.observation_space = spaces.Box(
+            low=-np.inf, high=np.inf, 
+            shape=(self.cfg.WINDOW_SIZE, self.features_df.shape[1]), 
+            dtype=np.float32
+        )
         self._reset_state()
     
     def _reset_state(self):
@@ -198,27 +180,50 @@ class TradingEnv(gym.Env):
         reward = 0.0
         done = False
 
-        if action == 1:
-            self.balance -= self.cfg.ACTION_COST
-            if self.position_amount == 0:
-                self._open_position(current_price)
-            elif self.position_amount > 0:
-                reward = self._close_position(current_price)
+        ### ИЗМЕНЕНИЕ 2: Новая логика обработки действий ###
+        # Действие 1: Купить (только если нет открытой позиции)
+        if action == 1 and self.position_amount == 0:
+            self._open_position(current_price)
+            self.balance -= self.cfg.ACTION_COST # Штраф за действие
+        # Действие 2: Продать (только если есть открытая позиция)
+        elif action == 2 and self.position_amount > 0:
+            reward = self._close_position(current_price)
+            self.balance -= self.cfg.ACTION_COST # Штраф за действие
+        # Действие 0 (Hold) или нелогичные действия (купить при наличии, продать при отсутствии)
+        # не приводят к изменению позиции, но могут привести к закрытию по SL/TP.
 
+        # Проверка SL/TP происходит на каждом шаге, если позиция открыта
         if self.position_amount > 0:
-            if current_price <= self.stop_loss_price or current_price >= self.take_profit_price:
-                reward = self._close_position(current_price)
+            # Проверяем, не сработал ли SL или TP на текущей свече
+            low_price = self.prices_df.iloc[self.current_step]['low']
+            high_price = self.prices_df.iloc[self.current_step]['high']
+            
+            # Сначала проверяем стоп-лосс
+            if low_price <= self.stop_loss_price:
+                reward = self._close_position(self.stop_loss_price) # Закрываем по цене SL
+            # Затем тейк-профит
+            elif high_price >= self.take_profit_price:
+                reward = self._close_position(self.take_profit_price) # Закрываем по цене TP
 
+        # Обновляем шаг и состояние счета
         self.current_step += 1
         current_unrealized_pnl = (current_price - self.entry_price) * self.position_amount if self.position_amount > 0 else 0
         self.equity = self.balance + current_unrealized_pnl
         
+        # Условие завершения эпизода
         if self.current_step >= len(self.features_df) - 1 or self.equity <= 0:
             if self.position_amount > 0:
+                # Закрываем оставшуюся позицию по текущей цене, если данные закончились
                 reward = self._close_position(current_price)
             done = True
         
-        return self._get_observation(), reward, done, False, {'equity': self.equity}
+        # info_dict должен быть последним возвращаемым значением в gymnasium
+        info = {'equity': self.equity}
+        # gymnasium возвращает 5 значений: obs, reward, terminated, truncated, info
+        terminated = done 
+        truncated = False # Мы не используем усечение по времени, done обрабатывает все
+        
+        return self._get_observation(), reward, terminated, truncated, info
 
     def _open_position(self, price: float):
         self.entry_step = self.current_step
@@ -228,34 +233,43 @@ class TradingEnv(gym.Env):
         self.take_profit_price = price + (current_atr * self.cfg.ATR_TP_MULTIPLIER)
 
         order_size_usd = self.balance * self.cfg.ORDER_SIZE_RATIO
-        fee = order_size_usd * self.cfg.TRANSACTION_FEE
-        self.balance -= (order_size_usd + fee)
-        self.position_amount = order_size_usd / price
-        self.entry_price = price
+        if self.balance > 0 and order_size_usd > 0:
+            fee = order_size_usd * self.cfg.TRANSACTION_FEE
+            self.balance -= (order_size_usd + fee)
+            self.position_amount = order_size_usd / price
+            self.entry_price = price
 
     def _close_position(self, price: float) -> float:
         close_value = self.position_amount * price
         fee = close_value * self.cfg.TRANSACTION_FEE
         self.balance += (close_value - fee)
-        realized_pnl = (price - self.entry_price) * self.position_amount - (self.entry_price * self.position_amount * self.cfg.TRANSACTION_FEE) - fee
+        
+        # Расчет PnL теперь проще, т.к. баланс уже учитывает все комиссии
+        entry_value = self.position_amount * self.entry_price
+        realized_pnl = (close_value - fee) - (entry_value + entry_value * self.cfg.TRANSACTION_FEE)
+        
         self.trades.append(realized_pnl)
         
+        # Нормализуем награду относительно начального капитала для стабильности обучения
         reward = realized_pnl / self.cfg.INITIAL_BALANCE
         
+        # Бонус за торговлю по тренду
         if realized_pnl > 0:
             trend_at_entry = self.features_df.iloc[self.entry_step]['trend_signal']
-            if trend_at_entry > 0:
+            if trend_at_entry > 0: # Если входили в лонг по бычьему тренду
                 reward += self.cfg.TREND_PROFIT_BONUS
         
+        # Сброс состояния позиции
         self.position_amount = 0.0
         self.entry_price = 0.0
         self.stop_loss_price = 0.0
         self.take_profit_price = 0.0
         return reward
 
+
 def main():
-    print("🚀 СИСТЕМА V6.1 (Специалист) - ЗАПУСК")
-    data_loader = SimpleDataLoader("data/BTC_5_96w.csv")
+    print("🚀 СИСТЕМА V6.2 (Логика исправлена) - ЗАПУСК")
+    data_loader = SimpleDataLoader("data/BTC_5_96w.csv") # Убедись, что путь к файлу верный
     features_df, prices_df = data_loader.load_and_prepare_data()
 
     train_split_idx = int(len(features_df) * 0.8)
@@ -266,40 +280,39 @@ def main():
     env_fn = lambda: TradingEnv(train_features, train_prices)
     vec_env = DummyVecEnv([lambda: ChannelFirstWrapper(env_fn())])
 
-    # ИЗМЕНЕНО: Используем нашу кастомную CNN
     policy_kwargs = dict(
         features_extractor_class=CustomCNN,
         features_extractor_kwargs=dict(features_dim=128),
-        net_arch=dict(pi=[128, 64], vf=[128, 64]) 
+        net_arch=dict(pi=[128, 64], vf=[128, 64])
     )
 
-    # Автоматический выбор устройства для обучения
-    device = get_device()
-    
     model = PPO('CnnPolicy', vec_env, policy_kwargs=policy_kwargs,
                 learning_rate=TrendTraderConfig.LEARNING_RATE, ent_coef=TrendTraderConfig.ENTROPY_COEF,
                 n_steps=2048, batch_size=64, gamma=TrendTraderConfig.GAMMA,
-                verbose=1, device=device)
+                verbose=1, device="cpu") # Используй "cuda", если есть GPU
     
-    print("\n🎓 ЭТАП 4: ОБУЧЕНИЕ СПЕЦИАЛИСТА...")
+    print("\n🎓 ЭТАП 4: ОБУЧЕНИЕ МОДЕЛИ...")
     model.learn(total_timesteps=TrendTraderConfig.TOTAL_TIMESTEPS)
     
-    # ... (код тестирования и анализа без изменений) ...
     print("\n💰 ЭТАП 5: ТЕСТИРОВАНИЕ НА НЕВИДИМЫХ ДАННЫХ...")
     test_env_raw = TradingEnv(test_features, test_prices)
     test_env_wrapped = ChannelFirstWrapper(test_env_raw)
-    obs, _ = test_env_wrapped.reset()
+    
+    # ### ИЗМЕНЕНИЕ 3: Корректный цикл тестирования с новым API Gymnasium ###
+    obs, info = test_env_wrapped.reset()
     
     equity_history = [test_env_raw.equity]
     price_history = [test_env_raw._get_current_price()]
     
-    while True:
+    done = False
+    while not done:
         action, _ = model.predict(obs, deterministic=True)
-        obs, _, done, _, info = test_env_wrapped.step(int(action))
+        obs, reward, terminated, truncated, info = test_env_wrapped.step(int(action))
         
-        equity_history.append(test_env_raw.equity) 
+        equity_history.append(info['equity']) # Берем equity из info dict
         price_history.append(test_env_raw._get_current_price())
-        if done: break
+        
+        done = terminated or truncated
             
     print("\n📊 ЭТАП 6: АНАЛИЗ РЕЗУЛЬТАТОВ")
     initial_equity, final_equity = equity_history[0], equity_history[-1]
@@ -318,13 +331,22 @@ def main():
     print(f"🔄 Всего сделок: {total_trades}")
     print(f"✅ Процент прибыльных сделок: {win_rate:.1f}%")
     
+    plt.style.use('seaborn-v0_8-darkgrid')
     plt.figure(figsize=(15, 7))
-    plt.title('Результаты на тестовой выборке (V6.1 - Специалист)')
-    ax1 = plt.gca(); ax1.plot(equity_history, label='Equity', color='blue', linewidth=2)
-    ax1.set_xlabel('Шаги'); ax1.set_ylabel('Equity ($)', color='blue'); ax1.grid(True)
-    ax2 = ax1.twinx(); ax2.plot(price_history, label='Цена BTC', color='orange', alpha=0.6)
-    ax2.set_ylabel('Цена ($)', color='orange'); ax1.legend(loc='upper left'); ax2.legend(loc='upper right')
-    plt.tight_layout(); plt.show()
+    plt.title(f'Результаты на тестовой выборке (V6.2 - Исправленная логика)\nReturn: {total_return:.2f}% | Trades: {total_trades} | Win Rate: {win_rate:.1f}%')
+    ax1 = plt.gca()
+    ax1.plot(equity_history, label='Equity', color='royalblue', linewidth=2)
+    ax1.set_xlabel('Шаги')
+    ax1.set_ylabel('Equity ($)', color='royalblue')
+    
+    ax2 = ax1.twinx()
+    ax2.plot(price_history, label='Цена BTC', color='darkorange', alpha=0.6)
+    ax2.set_ylabel('Цена ($)', color='darkorange')
+    
+    ax1.legend(loc='upper left')
+    ax2.legend(loc='upper right')
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
-    main()
+    main() 

@@ -1,0 +1,26 @@
+# GPU версия для Linux (NVIDIA CUDA / AMD ROCm)
+numpy>=1.24.0
+pandas>=2.0.0
+stable-baselines3>=2.0.0
+gymnasium>=0.29.0
+matplotlib>=3.7.0
+
+# PyTorch с CUDA поддержкой (для NVIDIA GPU)
+# Для CUDA 11.8:
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch>=2.0.0+cu118
+torchvision>=0.15.0+cu118
+
+# Для CUDA 12.1 (раскомментируйте, если нужно):
+# --extra-index-url https://download.pytorch.org/whl/cu121  
+# torch>=2.0.0+cu121
+# torchvision>=0.15.0+cu121
+
+# Для AMD ROCm (раскомментируйте для AMD GPU):
+# --extra-index-url https://download.pytorch.org/whl/rocm5.6
+# torch>=2.0.0+rocm5.6
+# torchvision>=0.15.0+rocm5.6
+
+# Дополнительные библиотеки для мониторинга GPU
+psutil>=5.9.0
+gpustat>=1.0.0 
