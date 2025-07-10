@@ -1,19 +1,39 @@
-# GPU версия (требует NVIDIA GPU с CUDA)
+# GPU Requirements для CUDA 12.8
+# Удаленный сервер: 192.168.88.218
+
+# PyTorch с поддержкой CUDA 12.1 (совместим с CUDA 12.8)
+torch>=2.1.0
+torchvision>=0.16.0
+torchaudio>=2.1.0
+
+# Основные ML библиотеки
 numpy>=1.24.0
 pandas>=2.0.0
-stable-baselines3>=2.0.0
+scikit-learn>=1.3.0
+
+# Reinforcement Learning
+stable-baselines3>=2.2.1
 gymnasium>=0.29.0
+
+# Визуализация
 matplotlib>=3.7.0
+seaborn>=0.12.0
 
-# PyTorch с CUDA поддержкой (установка зависит от версии CUDA)
-# Для CUDA 11.8:
---index-url https://download.pytorch.org/whl/cu118
-torch>=2.0.0+cu118
+# Утилиты
+tqdm>=4.65.0
+psutil>=5.9.0
 
-# Для CUDA 12.1 раскомментируйте следующие строки:
-# --index-url https://download.pytorch.org/whl/cu121  
-# torch>=2.0.0+cu121
+# Работа с данными
+scipy>=1.10.0
+ta-lib>=0.4.25
 
-# Для последней версии CUDA:
-# --index-url https://download.pytorch.org/whl/cu124
-# torch>=2.0.0+cu124 
+# Мониторинг
+tensorboard>=2.14.0
+wandb>=0.15.0
+
+# Для работы с криптобиржами
+ccxt>=4.0.0
+
+# Дополнительные утилиты для обучения
+optuna>=3.4.0  # Гиперпараметр оптимизация
+joblib>=1.3.0  # Параллельная обработка 
