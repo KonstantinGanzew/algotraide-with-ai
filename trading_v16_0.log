@@ -1,0 +1,19 @@
+2025-07-15 07:56:18,502 - INFO - ==================== ЗАПУСК СИСТЕМЫ V16.0 (LSTM) ====================
+2025-07-15 07:56:18,535 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-15 07:56:18,536 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-15 07:56:18,536 - INFO - Начало иерархической загрузки данных...
+2025-07-15 07:56:18,960 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-15 07:56:19,007 - INFO - Данные подготовлены. State: (206406, 10)
+2025-07-15 07:56:19,008 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-15 07:56:20,271 - INFO - Модель RecurrentPPO (LSTM) создана. Начало обучения...
+2025-07-15 07:57:58,851 - INFO - Callback Step 10000: Eval Metric (Final Equity): 10000.00, Best: -inf
+2025-07-15 07:57:58,873 - INFO - New best model found! Saved to models/best_model_step_10000.zip
+2025-07-15 07:59:32,841 - INFO - Callback Step 20000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-15 08:01:11,761 - INFO - Callback Step 30000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-15 08:02:45,902 - INFO - Callback Step 40000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-15 08:04:25,970 - INFO - Callback Step 50000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-15 08:05:59,071 - INFO - Callback Step 60000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-15 08:05:59,071 - WARNING - Stopping early at step 60000.
+2025-07-15 08:05:59,072 - INFO - Обучение завершено. Лучшая модель: models/best_model_step_10000.zip
+2025-07-15 08:07:56,933 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-15 08:07:57,271 - INFO - Скрипт успешно завершил работу.

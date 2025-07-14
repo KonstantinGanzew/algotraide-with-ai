@@ -1,0 +1,26 @@
+2025-07-14 14:01:43,799 - INFO - ==================== ЗАПУСК СИСТЕМЫ V13.12 (Исправление Early Stopping) ====================
+2025-07-14 14:01:43,834 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-14 14:01:43,834 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-14 14:01:43,834 - INFO - Начало иерархической загрузки данных...
+2025-07-14 14:01:44,266 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-14 14:01:44,293 - INFO - Данные подготовлены. Image: (206406, 5), State: (206406, 8)
+2025-07-14 14:01:44,294 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-14 14:01:45,668 - INFO - Модель PPO создана. Начало обучения с Early Stopping...
+2025-07-14 14:02:18,978 - INFO - Callback Step 5000: Eval Metric (Final Equity): 9499.78, Best: -inf
+2025-07-14 14:02:19,049 - INFO - New best model found with metric 9499.78. Saved to models/best_model_step_5000.zip
+2025-07-14 14:02:50,718 - INFO - Callback Step 10000: Eval Metric (Final Equity): 9499.78, Best: 9499.78
+2025-07-14 14:03:25,330 - INFO - Callback Step 15000: Eval Metric (Final Equity): 9500.22, Best: 9499.78
+2025-07-14 14:03:25,383 - INFO - New best model found with metric 9500.22. Saved to models/best_model_step_15000.zip
+2025-07-14 14:03:58,056 - INFO - Callback Step 20000: Eval Metric (Final Equity): 9500.22, Best: 9500.22
+2025-07-14 14:04:32,331 - INFO - Callback Step 25000: Eval Metric (Final Equity): 9500.22, Best: 9500.22
+2025-07-14 14:05:03,390 - INFO - Callback Step 30000: Eval Metric (Final Equity): 10000.00, Best: 9500.22
+2025-07-14 14:05:03,442 - INFO - New best model found with metric 10000.00. Saved to models/best_model_step_30000.zip
+2025-07-14 14:05:36,118 - INFO - Callback Step 35000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:06:06,921 - INFO - Callback Step 40000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:06:41,033 - INFO - Callback Step 45000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:07:18,129 - INFO - Callback Step 50000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:07:53,410 - INFO - Callback Step 55000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:07:53,410 - WARNING - Stopping training early at step 55000.
+2025-07-14 14:07:53,411 - INFO - Обучение завершено. Лучшая модель сохранена в: models/best_model_step_30000.zip
+2025-07-14 14:11:13,543 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-14 14:11:13,903 - INFO - Скрипт успешно завершил работу.

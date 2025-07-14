@@ -1,0 +1,22 @@
+2025-07-14 16:40:47,391 - INFO - ==================== ЗАПУСК СИСТЕМЫ V14.0 (State-Only MLP) ====================
+2025-07-14 16:40:47,457 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-14 16:40:47,461 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-14 16:40:47,461 - INFO - Начало иерархической загрузки данных...
+2025-07-14 16:40:48,041 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-14 16:40:48,097 - INFO - Данные подготовлены. State: (206406, 9)
+2025-07-14 16:40:48,097 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-14 16:40:49,440 - INFO - Модель PPO (MLP) создана. Начало обучения...
+2025-07-14 16:41:23,882 - INFO - Callback Step 10000: Eval Metric (Final Equity): 9800.09, Best: -inf
+2025-07-14 16:41:23,900 - INFO - New best model found with metric 9800.09. Saved to models/best_model_step_10000.zip
+2025-07-14 16:41:56,240 - INFO - Callback Step 20000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:42:30,661 - INFO - Callback Step 30000: Eval Metric (Final Equity): 10000.00, Best: 9800.09
+2025-07-14 16:42:30,676 - INFO - New best model found with metric 10000.00. Saved to models/best_model_step_30000.zip
+2025-07-14 16:45:31,875 - INFO - Callback Step 40000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:46:06,957 - INFO - Callback Step 50000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:46:39,317 - INFO - Callback Step 60000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:47:12,638 - INFO - Callback Step 70000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:47:44,773 - INFO - Callback Step 80000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:47:44,773 - WARNING - Stopping training early at step 80000.
+2025-07-14 16:47:44,774 - INFO - Обучение завершено. Лучшая модель сохранена в: models/best_model_step_30000.zip
+2025-07-14 16:49:05,940 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-14 16:49:06,418 - INFO - Скрипт успешно завершил работу.

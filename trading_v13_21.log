@@ -1,0 +1,22 @@
+2025-07-14 16:03:15,543 - INFO - ==================== ЗАПУСК СИСТЕМЫ V13.21 (Осторожное расширение) ====================
+2025-07-14 16:03:15,576 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-14 16:03:15,577 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-14 16:03:15,577 - INFO - Начало иерархической загрузки данных...
+2025-07-14 16:03:15,986 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-14 16:03:16,012 - INFO - Данные подготовлены. Image: (206406, 5), State: (206406, 8)
+2025-07-14 16:03:16,013 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-14 16:03:17,313 - INFO - Модель PPO создана. Начало обучения с Early Stopping...
+2025-07-14 16:03:49,355 - INFO - Callback Step 5000: Eval Metric (Final Equity): 9800.09, Best: -inf
+2025-07-14 16:03:49,509 - INFO - New best model found with metric 9800.09. Saved to models/best_model_step_5000.zip
+2025-07-14 16:04:20,280 - INFO - Callback Step 10000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:04:52,933 - INFO - Callback Step 15000: Eval Metric (Final Equity): 10000.00, Best: 9800.09
+2025-07-14 16:04:53,024 - INFO - New best model found with metric 10000.00. Saved to models/best_model_step_15000.zip
+2025-07-14 16:05:24,083 - INFO - Callback Step 20000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:05:57,692 - INFO - Callback Step 25000: Eval Metric (Final Equity): 9800.09, Best: 10000.00
+2025-07-14 16:06:28,409 - INFO - Callback Step 30000: Eval Metric (Final Equity): 9800.09, Best: 10000.00
+2025-07-14 16:07:04,142 - INFO - Callback Step 35000: Eval Metric (Final Equity): 9800.09, Best: 10000.00
+2025-07-14 16:07:38,951 - INFO - Callback Step 40000: Eval Metric (Final Equity): 9799.91, Best: 10000.00
+2025-07-14 16:07:38,952 - WARNING - Stopping training early at step 40000.
+2025-07-14 16:07:38,952 - INFO - Обучение завершено. Лучшая модель сохранена в: models/best_model_step_15000.zip
+2025-07-14 16:10:55,500 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-14 16:10:55,847 - INFO - Скрипт успешно завершил работу.

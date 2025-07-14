@@ -1,0 +1,19 @@
+2025-07-14 14:21:42,095 - INFO - ==================== ЗАПУСК СИСТЕМЫ V13.13 (Учим терпению) ====================
+2025-07-14 14:21:42,128 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-14 14:21:42,128 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-14 14:21:42,128 - INFO - Начало иерархической загрузки данных...
+2025-07-14 14:21:42,521 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-14 14:21:42,547 - INFO - Данные подготовлены. Image: (206406, 5), State: (206406, 8)
+2025-07-14 14:21:42,548 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-14 14:21:43,813 - INFO - Модель PPO создана. Начало обучения с Early Stopping...
+2025-07-14 14:22:16,181 - INFO - Callback Step 5000: Eval Metric (Final Equity): 10000.00, Best: -inf
+2025-07-14 14:22:16,303 - INFO - New best model found with metric 10000.00. Saved to models/best_model_step_5000.zip
+2025-07-14 14:22:47,059 - INFO - Callback Step 10000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:23:19,624 - INFO - Callback Step 15000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:23:49,738 - INFO - Callback Step 20000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:24:21,156 - INFO - Callback Step 25000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:24:51,520 - INFO - Callback Step 30000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 14:24:51,520 - WARNING - Stopping training early at step 30000.
+2025-07-14 14:24:51,520 - INFO - Обучение завершено. Лучшая модель сохранена в: models/best_model_step_5000.zip
+2025-07-14 14:28:03,573 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-14 14:28:03,998 - INFO - Скрипт успешно завершил работу.

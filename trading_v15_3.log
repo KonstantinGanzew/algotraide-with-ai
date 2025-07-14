@@ -1,0 +1,37 @@
+2025-07-14 18:56:29,094 - INFO - ==================== ЗАПУСК СИСТЕМЫ V15.3 (Марафон обучения) ====================
+2025-07-14 18:56:29,128 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-14 18:56:29,128 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-14 18:56:29,128 - INFO - Начало иерархической загрузки данных...
+2025-07-14 18:56:29,560 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-14 18:56:29,611 - INFO - Данные подготовлены. State: (206406, 10)
+2025-07-14 18:56:29,612 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-14 18:56:30,830 - INFO - Модель RecurrentPPO (LSTM) создана. Начало обучения...
+2025-07-14 18:58:11,581 - INFO - Callback Step 10000: Eval Metric (Final Equity): 10009.32, Best: -inf
+2025-07-14 18:58:11,600 - INFO - New best model found with metric 10009.32. Saved to models/best_model_step_10000.zip
+2025-07-14 18:59:40,961 - INFO - Callback Step 20000: Eval Metric (Final Equity): 9984.86, Best: 10009.32
+2025-07-14 19:01:18,610 - INFO - Callback Step 30000: Eval Metric (Final Equity): 10003.70, Best: 10009.32
+2025-07-14 19:02:47,362 - INFO - Callback Step 40000: Eval Metric (Final Equity): 9969.26, Best: 10009.32
+2025-07-14 19:04:23,752 - INFO - Callback Step 50000: Eval Metric (Final Equity): 9987.27, Best: 10009.32
+2025-07-14 19:05:58,034 - INFO - Callback Step 60000: Eval Metric (Final Equity): 10003.10, Best: 10009.32
+2025-07-14 19:07:33,738 - INFO - Callback Step 70000: Eval Metric (Final Equity): 10008.28, Best: 10009.32
+2025-07-14 19:09:02,679 - INFO - Callback Step 80000: Eval Metric (Final Equity): 10022.08, Best: 10009.32
+2025-07-14 19:09:02,694 - INFO - New best model found with metric 10022.08. Saved to models/best_model_step_80000.zip
+2025-07-14 19:10:37,061 - INFO - Callback Step 90000: Eval Metric (Final Equity): 10011.41, Best: 10022.08
+2025-07-14 19:12:16,824 - INFO - Callback Step 100000: Eval Metric (Final Equity): 10024.43, Best: 10022.08
+2025-07-14 19:12:16,839 - INFO - New best model found with metric 10024.43. Saved to models/best_model_step_100000.zip
+2025-07-14 19:13:48,104 - INFO - Callback Step 110000: Eval Metric (Final Equity): 10040.53, Best: 10024.43
+2025-07-14 19:13:48,118 - INFO - New best model found with metric 10040.53. Saved to models/best_model_step_110000.zip
+2025-07-14 19:15:23,429 - INFO - Callback Step 120000: Eval Metric (Final Equity): 10001.24, Best: 10040.53
+2025-07-14 19:16:57,361 - INFO - Callback Step 130000: Eval Metric (Final Equity): 10010.61, Best: 10040.53
+2025-07-14 19:18:35,108 - INFO - Callback Step 140000: Eval Metric (Final Equity): 10020.71, Best: 10040.53
+2025-07-14 19:20:05,851 - INFO - Callback Step 150000: Eval Metric (Final Equity): 10001.09, Best: 10040.53
+2025-07-14 19:21:40,550 - INFO - Callback Step 160000: Eval Metric (Final Equity): 10001.36, Best: 10040.53
+2025-07-14 19:23:06,516 - INFO - Callback Step 170000: Eval Metric (Final Equity): 9995.33, Best: 10040.53
+2025-07-14 19:24:34,280 - INFO - Callback Step 180000: Eval Metric (Final Equity): 9979.57, Best: 10040.53
+2025-07-14 19:26:11,132 - INFO - Callback Step 190000: Eval Metric (Final Equity): 9969.99, Best: 10040.53
+2025-07-14 19:27:38,338 - INFO - Callback Step 200000: Eval Metric (Final Equity): 9965.84, Best: 10040.53
+2025-07-14 19:29:10,976 - INFO - Callback Step 210000: Eval Metric (Final Equity): 9969.67, Best: 10040.53
+2025-07-14 19:29:10,976 - WARNING - Stopping training early at step 210000.
+2025-07-14 19:29:10,976 - INFO - Обучение завершено. Лучшая модель сохранена в: models/best_model_step_110000.zip
+2025-07-14 19:30:46,159 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-14 19:30:46,553 - INFO - Скрипт успешно завершил работу.

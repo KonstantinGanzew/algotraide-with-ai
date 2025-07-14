@@ -1,0 +1,25 @@
+2025-07-14 16:53:24,343 - INFO - ==================== ЗАПУСК СИСТЕМЫ V14.1 (State-Only + Momentum) ====================
+2025-07-14 16:53:24,383 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-14 16:53:24,383 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-14 16:53:24,384 - INFO - Начало иерархической загрузки данных...
+2025-07-14 16:53:24,901 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-14 16:53:24,959 - INFO - Данные подготовлены. State: (206406, 10)
+2025-07-14 16:53:24,960 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-14 16:53:26,403 - INFO - Модель PPO (MLP) создана. Начало обучения...
+2025-07-14 16:53:59,541 - INFO - Callback Step 10000: Eval Metric (Final Equity): 9800.09, Best: -inf
+2025-07-14 16:53:59,556 - INFO - New best model found with metric 9800.09. Saved to models/best_model_step_10000.zip
+2025-07-14 16:54:31,901 - INFO - Callback Step 20000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:55:08,046 - INFO - Callback Step 30000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:55:40,463 - INFO - Callback Step 40000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:56:13,946 - INFO - Callback Step 50000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:56:47,359 - INFO - Callback Step 60000: Eval Metric (Final Equity): 10000.00, Best: 9800.09
+2025-07-14 16:56:47,372 - INFO - New best model found with metric 10000.00. Saved to models/best_model_step_60000.zip
+2025-07-14 16:57:22,132 - INFO - Callback Step 70000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:57:53,340 - INFO - Callback Step 80000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:58:24,855 - INFO - Callback Step 90000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:58:58,564 - INFO - Callback Step 100000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:59:31,031 - INFO - Callback Step 110000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:59:31,031 - WARNING - Stopping training early at step 110000.
+2025-07-14 16:59:31,032 - INFO - Обучение завершено. Лучшая модель сохранена в: models/best_model_step_60000.zip
+2025-07-14 17:01:00,904 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-14 17:01:01,360 - INFO - Скрипт успешно завершил работу.

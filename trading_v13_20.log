@@ -1,0 +1,23 @@
+2025-07-14 16:14:21,041 - INFO - ==================== ЗАПУСК СИСТЕМЫ V13.20 (Обогащение данных) ====================
+2025-07-14 16:14:21,076 - INFO - 🚀 NVIDIA CUDA: Tesla M40
+2025-07-14 16:14:21,077 - INFO - 📊 GPU память: 0.0GB / 12.0GB
+2025-07-14 16:14:21,077 - INFO - Начало иерархической загрузки данных...
+2025-07-14 16:14:21,529 - INFO - Удалено 3834 строк с NaN/inf значениями.
+2025-07-14 16:14:21,584 - INFO - Данные подготовлены. Image: (206406, 5), State: (206406, 9)
+2025-07-14 16:14:21,585 - INFO - Данные разделены: 144484 обуч., 20640 валид., 41282 тест.
+2025-07-14 16:14:22,885 - INFO - Модель PPO создана. Начало обучения с Early Stopping...
+2025-07-14 16:15:28,430 - INFO - Callback Step 10000: Eval Metric (Final Equity): 9800.09, Best: -inf
+2025-07-14 16:15:28,558 - INFO - New best model found with metric 9800.09. Saved to models/best_model_step_10000.zip
+2025-07-14 16:16:31,338 - INFO - Callback Step 20000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:17:40,520 - INFO - Callback Step 30000: Eval Metric (Final Equity): 9800.09, Best: 9800.09
+2025-07-14 16:18:52,099 - INFO - Callback Step 40000: Eval Metric (Final Equity): 10000.00, Best: 9800.09
+2025-07-14 16:18:52,160 - INFO - New best model found with metric 10000.00. Saved to models/best_model_step_40000.zip
+2025-07-14 16:20:07,085 - INFO - Callback Step 50000: Eval Metric (Final Equity): 9799.91, Best: 10000.00
+2025-07-14 16:21:15,076 - INFO - Callback Step 60000: Eval Metric (Final Equity): 9799.91, Best: 10000.00
+2025-07-14 16:22:31,664 - INFO - Callback Step 70000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:23:38,798 - INFO - Callback Step 80000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:24:48,515 - INFO - Callback Step 90000: Eval Metric (Final Equity): 10000.00, Best: 10000.00
+2025-07-14 16:24:48,515 - WARNING - Stopping training early at step 90000.
+2025-07-14 16:24:48,515 - INFO - Обучение завершено. Лучшая модель сохранена в: models/best_model_step_40000.zip
+2025-07-14 16:28:09,762 - INFO - Тестирование завершено. Расчет финальных метрик.
+2025-07-14 16:28:10,118 - INFO - Скрипт успешно завершил работу.
